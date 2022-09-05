@@ -1,0 +1,54 @@
+{
+  "name": "@apihero/react",
+  "version": "1.0.0-beta.0",
+  "description": "Integrates API Hero with your React app",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "rollup -c",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apihero-run/apihero-react.git"
+  },
+  "keywords": [
+    "API Hero",
+    "react",
+    "react-query",
+    "typescript",
+    "rest",
+    "api",
+    "http"
+  ],
+  "author": "Eric Allam",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apihero-run/apihero-react/issues"
+  },
+  "homepage": "https://github.com/apihero-run/apihero-react#readme",
+  "peerDependencies": {
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^22.0.2",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@types/react": "^18.0.18",
+    "react": "^18.2.0",
+    "rollup": "^2.79.0",
+    "rollup-plugin-dts": "^4.2.2",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-typescript2": "^0.33.0",
+    "typescript": "^4.8.2"
+  },
+  "dependencies": {
+    "@apihero/core": "^1.0.1",
+    "@tanstack/react-query": "^4.2.3",
+    "tiny-invariant": "^1.2.0"
+  }
+}

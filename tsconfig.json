@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationDir": "dist/dts",
+    // "emitDeclarationOnly": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": ["ES5", "ES2015", "ES2016", "DOM", "ESNext"],
+    "types": ["node"],
+    "module": "es2015",
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "noUnusedLocals": true,
+    "outDir": "dist/esm",
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES6"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}
