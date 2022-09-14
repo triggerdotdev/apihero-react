@@ -6,31 +6,58 @@ import {
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import React from "react";
+import React, { useContext } from "react";
 import invariant from "tiny-invariant";
 
-const queryClient = new QueryClient();
-
-export function APIHeroProvider({ children }: { children: React.ReactNode }) {
-  return (
-    // Provide the client to your App
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-}
-
-const BASE_URL =
-  process.env.APIHERO_URL ??
-  process.env.NEXT_PUBLIC_APIHERO_URL ??
-  "https://app.apihero.run";
+const GATEWAY_URL =
+  process.env.APIHERO_GATEWAY_URL ??
+  process.env.NEXT_PUBLIC_APIHERO_GATEWAY_URL ??
+  "https://gateway.apihero.run";
 
 const PROJECT_KEY =
   process.env.APIHERO_PROJECT_KEY ??
   process.env.NEXT_PUBLIC_APIHERO_PROJECT_KEY;
 
-invariant(
-  PROJECT_KEY,
-  "APIHero project key is required. Set APIHERO_PROJECT_KEY or NEXT_PUBLIC_APIHERO_PROJECT_KEY"
-);
+const queryClient = new QueryClient();
+
+type ApiHeroContextType = {
+  projectKey: string;
+  gatewayUrl: string;
+};
+
+const ApiHeroContext = React.createContext<ApiHeroContextType | null>(null);
+
+export function APIHeroProvider({
+  children,
+  projectKey,
+  gatewayUrl,
+}: {
+  children: React.ReactNode;
+  projectKey?: string;
+  gatewayUrl?: string;
+}) {
+  const resolvedProjectKey = projectKey ?? PROJECT_KEY;
+  const resolvedGatewayUrl = gatewayUrl ?? GATEWAY_URL;
+
+  invariant(
+    resolvedProjectKey,
+    "APIHeroProvider: projectKey is required, or you can set the APIHERO_PROJECT_KEY environment variable"
+  );
+
+  return (
+    // Provide the client to your App
+    <QueryClientProvider client={queryClient}>
+      <ApiHeroContext.Provider
+        value={{
+          projectKey: resolvedProjectKey,
+          gatewayUrl: resolvedGatewayUrl,
+        }}
+      >
+        {children}
+      </ApiHeroContext.Provider>
+    </QueryClientProvider>
+  );
+}
 
 export function createEndpoint<TProps, TResponseBody, THeaders>(
   endpoint: ApiHeroEndpoint<TProps, TResponseBody, THeaders>,
@@ -44,17 +71,19 @@ export function createEndpoint<TProps, TResponseBody, THeaders>(
   const options = { ...defaultOptions, ...queryOptions };
 
   return (props) => {
+    const { projectKey, gatewayUrl } = useContext(ApiHeroContext) ?? {};
+
     const useQueryResult = useQuery<TResponseBody, Error>(
       [endpoint.clientId, endpoint.id, props],
       async (): Promise<TResponseBody> => {
-        const res = await fetch(`${BASE_URL}/gateway/run`, {
+        const res = await fetch(`${gatewayUrl}/gateway/run`, {
           method: "POST",
           body: JSON.stringify({
             endpoint,
             params: props,
           }),
           headers: {
-            Authorization: `token ${PROJECT_KEY}`,
+            Authorization: `token ${projectKey}`,
           },
         });
 
