@@ -2,9 +2,13 @@ import { ApiHeroEndpoint } from "@apihero/core";
 import {
   QueryClient,
   QueryClientProvider,
+  useMutation,
+  UseMutationOptions,
+  UseMutationResult,
   useQuery,
   UseQueryOptions,
   UseQueryResult,
+  useQueryClient,
 } from "@tanstack/react-query";
 import React, { useContext } from "react";
 import invariant from "tiny-invariant";
@@ -59,16 +63,60 @@ export function APIHeroProvider({
   );
 }
 
-export function createEndpoint<TProps, TResponseBody, THeaders>(
+export const useApiHeroClient = useQueryClient;
+
+export type CreateMutationOptions = {
+  invalidates?: Array<ApiHeroEndpoint<unknown, unknown>>;
+};
+
+export function createMutation<TProps, TResponseBody, THeaders>(
   endpoint: ApiHeroEndpoint<TProps, TResponseBody, THeaders>,
-  queryOptions: UseQueryOptions<TResponseBody, Error> = {}
+  options?: CreateMutationOptions
+): (
+  mutationOptions?: UseMutationOptions<TResponseBody, Error, TProps>
+) => UseMutationResult<TResponseBody, Error, TProps> {
+  return (mutationOptions) => {
+    const { projectKey, gatewayUrl } = useContext(ApiHeroContext) ?? {};
+
+    const useMutationResult = useMutation<TResponseBody, Error, TProps>(
+      (props) => {
+        return fetch(`${gatewayUrl}/gateway/run`, {
+          method: "POST",
+          headers: {
+            Authorization: `token ${projectKey}`,
+          },
+          body: JSON.stringify({
+            endpoint,
+            params: props,
+          }),
+        }).then((res) => res.json());
+      },
+      {
+        ...mutationOptions,
+        onSuccess: (data, variables, context) => {
+          mutationOptions?.onSuccess?.(data, variables, context);
+
+          options?.invalidates?.forEach((endpoint) => {
+            queryClient.invalidateQueries([endpoint.clientId, endpoint.id]);
+          });
+        },
+      }
+    );
+
+    return useMutationResult;
+  };
+}
+
+export function createQuery<TProps, TResponseBody, THeaders>(
+  endpoint: ApiHeroEndpoint<TProps, TResponseBody, THeaders>,
+  options: UseQueryOptions<TResponseBody, Error> = {}
 ): (props: TProps | undefined) => UseQueryResult<TResponseBody, Error> {
   const defaultOptions: UseQueryOptions<TResponseBody, Error> = {
     refetchOnWindowFocus: false,
     retry: false,
   };
 
-  const options = { ...defaultOptions, ...queryOptions };
+  const opts = { ...defaultOptions, ...options };
 
   return (props) => {
     const { projectKey, gatewayUrl } = useContext(ApiHeroContext) ?? {};
@@ -93,9 +141,11 @@ export function createEndpoint<TProps, TResponseBody, THeaders>(
 
         return res.json();
       },
-      options
+      opts
     );
 
     return useQueryResult;
   };
 }
+
+export const createEndpoint = createQuery;

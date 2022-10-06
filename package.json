@@ -11,7 +11,9 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "rollup -c",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "vitest run",
+    "test:dev": "vitest"
   },
   "publishConfig": {
     "access": "public"
@@ -39,19 +41,26 @@
     "react": "16.8.x || 17.x || 18.x"
   },
   "devDependencies": {
+    "@apihero/core": "^1.0.1",
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-node-resolve": "^13.3.0",
+    "@testing-library/react": "^13.4.0",
     "@types/react": "^18.0.18",
+    "@vitejs/plugin-react": "^2.1.0",
+    "jsdom": "^20.0.1",
+    "msw": "^0.47.4",
+    "node-fetch": "^2.6.7",
     "react": "^18.2.0",
     "rimraf": "^3.0.2",
     "rollup": "^2.79.0",
     "rollup-plugin-dts": "^4.2.2",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-typescript2": "^0.33.0",
-    "typescript": "^4.8.2"
+    "typescript": "^4.8.2",
+    "vite-tsconfig-paths": "^3.5.1",
+    "vitest": "^0.23.4"
   },
   "dependencies": {
-    "@apihero/core": "^1.0.1",
     "@tanstack/react-query": "^4.2.3",
     "tiny-invariant": "^1.2.0"
   }
