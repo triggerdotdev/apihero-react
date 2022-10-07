@@ -9,6 +9,10 @@ import {
   UseQueryOptions,
   UseQueryResult,
   useQueryClient,
+  InvalidateQueryFilters,
+  InvalidateOptions,
+  RefetchQueryFilters,
+  RefetchOptions,
 } from "@tanstack/react-query";
 import React, { useContext } from "react";
 import invariant from "tiny-invariant";
@@ -64,6 +68,32 @@ export function APIHeroProvider({
 }
 
 export const useApiHeroClient = useQueryClient;
+
+export async function invalidateQuery<TProps, TResponseBody, THeaders>(
+  endpoint: ApiHeroEndpoint<TProps, TResponseBody, THeaders>,
+  props?: TProps,
+  filters?: InvalidateQueryFilters,
+  options?: InvalidateOptions
+) {
+  await queryClient.invalidateQueries(
+    [endpoint.clientId, endpoint.id, props],
+    filters,
+    options
+  );
+}
+
+export async function refetchQuery<TProps, TResponseBody, THeaders>(
+  endpoint: ApiHeroEndpoint<TProps, TResponseBody, THeaders>,
+  props?: TProps,
+  filters?: RefetchQueryFilters,
+  options?: RefetchOptions
+) {
+  await queryClient.refetchQueries(
+    [endpoint.clientId, endpoint.id, props],
+    filters,
+    options
+  );
+}
 
 export type CreateMutationOptions = {
   invalidates?: Array<ApiHeroEndpoint<unknown, unknown>>;
