@@ -113,44 +113,4 @@ describe("using invalidateQuery", () => {
 
     expect(result2).toBeTruthy();
   });
-
-  it("should allow invalidating a query for specific endpoint without props", async () => {
-    function App({ id }: { id: string }) {
-      const repoResult = useMockGetRepoEndpoint({ id });
-
-      const invalidate = useCallback(() => {
-        invalidateQuery(mockGetRepo).catch(console.error);
-      }, []);
-
-      if (repoResult.status === "success") {
-        return (
-          <>
-            <div>Success</div>
-            <div>{repoResult.data.username}</div>
-            <button onClick={() => invalidate()}>Submit</button>
-          </>
-        );
-      }
-
-      return <div>Loading...</div>;
-    }
-
-    render(
-      <APIHeroProvider projectKey="key_123">
-        <App id="1" />
-      </APIHeroProvider>
-    );
-
-    const button = await screen.findByRole("button");
-
-    const result1 = await screen.findByText("ericallam1");
-
-    expect(result1).toBeTruthy();
-
-    fireEvent.click(button);
-
-    const result2 = await screen.findByText("ericallam2");
-
-    expect(result2).toBeTruthy();
-  });
 });
