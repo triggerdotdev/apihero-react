@@ -126,7 +126,7 @@ export function createQuery<TProps, TResponseBody, THeaders>(
 
     const useQueryResult = useQuery<TResponseBody, Error>(
       [endpoint.clientId, endpoint.id, props],
-      async (): Promise<TResponseBody> => {
+      async (context): Promise<TResponseBody> => {
         const res = await fetch(`${gatewayUrl}/gateway/run`, {
           method: "POST",
           body: JSON.stringify({
@@ -136,6 +136,7 @@ export function createQuery<TProps, TResponseBody, THeaders>(
           headers: {
             Authorization: `token ${projectKey}`,
           },
+          signal: context.signal,
         });
 
         if (!res.ok) {
