@@ -79,7 +79,7 @@ describe("using invalidateQuery", () => {
       const repoResult = useMockGetRepoEndpoint({ id });
 
       const invalidate = useCallback(() => {
-        invalidateQuery(mockGetRepo, { id }).catch(console.error);
+        invalidateQuery(repoResult.endpoint, { id }).catch(console.error);
       }, [id]);
 
       if (repoResult.status === "success") {

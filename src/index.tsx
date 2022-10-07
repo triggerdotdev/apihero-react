@@ -104,7 +104,9 @@ export function createMutation<TProps, TResponseBody, THeaders>(
   options?: CreateMutationOptions
 ): (
   mutationOptions?: UseMutationOptions<TResponseBody, Error, TProps>
-) => UseMutationResult<TResponseBody, Error, TProps> {
+) => UseMutationResult<TResponseBody, Error, TProps> & {
+  endpoint: ApiHeroEndpoint<TProps, TResponseBody, THeaders>;
+} {
   return (mutationOptions) => {
     const { projectKey, gatewayUrl } = useContext(ApiHeroContext) ?? {};
 
@@ -133,7 +135,7 @@ export function createMutation<TProps, TResponseBody, THeaders>(
       }
     );
 
-    return useMutationResult;
+    return { ...useMutationResult, endpoint };
   };
 }
 
@@ -143,7 +145,9 @@ export function createQuery<TProps, TResponseBody, THeaders>(
 ): (
   props: TProps | undefined,
   queryOptions?: UseQueryOptions<TResponseBody, Error>
-) => UseQueryResult<TResponseBody, Error> {
+) => UseQueryResult<TResponseBody, Error> & {
+  endpoint: ApiHeroEndpoint<TProps, TResponseBody, THeaders>;
+} {
   const defaultOptions: UseQueryOptions<TResponseBody, Error> = {
     refetchOnWindowFocus: false,
     retry: false,
@@ -178,7 +182,7 @@ export function createQuery<TProps, TResponseBody, THeaders>(
       { ...opts, ...(queryOptions ?? {}) }
     );
 
-    return useQueryResult;
+    return { ...useQueryResult, endpoint };
   };
 }
 
