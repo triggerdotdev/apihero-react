@@ -15,7 +15,6 @@ import {
   RefetchOptions,
 } from "@tanstack/react-query";
 import React, { useContext } from "react";
-import invariant from "tiny-invariant";
 
 const GATEWAY_URL =
   process.env.APIHERO_GATEWAY_URL ??
@@ -29,11 +28,14 @@ const PROJECT_KEY =
 const queryClient = new QueryClient();
 
 type ApiHeroContextType = {
-  projectKey: string;
+  projectKey?: string;
   gatewayUrl: string;
 };
 
-const ApiHeroContext = React.createContext<ApiHeroContextType | null>(null);
+const ApiHeroContext = React.createContext<ApiHeroContextType>({
+  projectKey: PROJECT_KEY,
+  gatewayUrl: GATEWAY_URL,
+});
 
 export function APIHeroProvider({
   children,
@@ -46,11 +48,6 @@ export function APIHeroProvider({
 }) {
   const resolvedProjectKey = projectKey ?? PROJECT_KEY;
   const resolvedGatewayUrl = gatewayUrl ?? GATEWAY_URL;
-
-  invariant(
-    resolvedProjectKey,
-    "APIHeroProvider: projectKey is required, or you can set the APIHERO_PROJECT_KEY environment variable"
-  );
 
   return (
     // Provide the client to your App
@@ -97,6 +94,7 @@ export async function refetchQuery<TProps, TResponseBody, THeaders>(
 
 export type CreateMutationOptions = {
   invalidates?: Array<ApiHeroEndpoint<unknown, unknown>>;
+  projectKey?: string;
 };
 
 export function createMutation<TProps, TResponseBody, THeaders>(
@@ -108,14 +106,21 @@ export function createMutation<TProps, TResponseBody, THeaders>(
   endpoint: ApiHeroEndpoint<TProps, TResponseBody, THeaders>;
 } {
   return (mutationOptions) => {
-    const { projectKey, gatewayUrl } = useContext(ApiHeroContext) ?? {};
+    const contextOptions = useContext(ApiHeroContext);
+    const resolvedProjectKey = options?.projectKey ?? contextOptions.projectKey;
+
+    if (!resolvedProjectKey) {
+      throw new Error(
+        "createMutation: projectKey is missing. Did you forget to wrap your app in an <ApiHeroProvider>? Alternatively, you can set the APIHERO_PROJECT_KEY or NEXT_PUBLIC_APIHERO_PROJECT_KEY environment variable."
+      );
+    }
 
     const useMutationResult = useMutation<TResponseBody, Error, TProps>(
       (props) => {
-        return fetch(`${gatewayUrl}/gateway/run`, {
+        return fetch(`${contextOptions.gatewayUrl}/gateway/run`, {
           method: "POST",
           headers: {
-            Authorization: `token ${projectKey}`,
+            Authorization: `token ${resolvedProjectKey}`,
           },
           body: JSON.stringify({
             endpoint,
@@ -139,9 +144,14 @@ export function createMutation<TProps, TResponseBody, THeaders>(
   };
 }
 
+export interface CreateQueryOptions<TResponseBody, TError>
+  extends UseQueryOptions<TResponseBody, TError> {
+  projectKey?: string;
+}
+
 export function createQuery<TProps, TResponseBody, THeaders>(
   endpoint: ApiHeroEndpoint<TProps, TResponseBody, THeaders>,
-  options: UseQueryOptions<TResponseBody, Error> = {}
+  options: CreateQueryOptions<TResponseBody, Error> = {}
 ): (
   props: TProps | undefined,
   queryOptions?: UseQueryOptions<TResponseBody, Error>
@@ -156,19 +166,26 @@ export function createQuery<TProps, TResponseBody, THeaders>(
   const opts = { ...defaultOptions, ...options };
 
   return (props, queryOptions) => {
-    const { projectKey, gatewayUrl } = useContext(ApiHeroContext) ?? {};
+    const contextOptions = useContext(ApiHeroContext);
+    const resolvedProjectKey = options?.projectKey ?? contextOptions.projectKey;
+
+    if (!resolvedProjectKey) {
+      throw new Error(
+        "createQuery: projectKey is missing. Did you forget to wrap your app in an <ApiHeroProvider>? Alternatively, you can set the APIHERO_PROJECT_KEY or NEXT_PUBLIC_APIHERO_PROJECT_KEY environment variable."
+      );
+    }
 
     const useQueryResult = useQuery<TResponseBody, Error>(
       [endpoint.clientId, endpoint.id, props],
       async (context): Promise<TResponseBody> => {
-        const res = await fetch(`${gatewayUrl}/gateway/run`, {
+        const res = await fetch(`${contextOptions.gatewayUrl}/gateway/run`, {
           method: "POST",
           body: JSON.stringify({
             endpoint,
             params: props,
           }),
           headers: {
-            Authorization: `token ${projectKey}`,
+            Authorization: `token ${resolvedProjectKey}`,
           },
           signal: context.signal,
         });
